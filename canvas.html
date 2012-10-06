@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<!--[if IE]><script type="text/javascript" src="/_lib/js/excanvas.js"></script><![endif]-->
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
+<style type="text/css">
+  #container{
+    width: 600px;
+    float:left;
+    margin-right:10px;
+  }
+  #testCanvas{
+    height: 300px;
+    border: 1px solid #CCC;
+  }
+  #sidebar{
+    width: 180px;
+    float: right;
+    border: 1px solid #CCC;
+  }
+</style>
+</head>
+
+<body>
+<div id="container">
+  draw : 
+  <button id="start" type="button" name="start" value="start" onClick="draw_start();">start</button>
+  <button id="stop" type="button" name="stop" value="stop" onClick="stop();">stop</button>
+  <button id="clear" type="button" name="clear" value="clear" onClick="draw_clear();">clear</button>
+  <br>
+  Graphic : 
+  <button id="rect" type="button" name="rect" value="rect" onClick="grap = 'rect';$('#GrapSel').text('四角');">Rect</button>
+  <button id="star" type="button" name="star" value="star" onClick="grap = 'star';$('#GrapSel').text('星');">Star</button>
+  <button id="circle" type="button" name="circle" value="circle" onClick="grap = 'circle';$('#GrapSel').text('丸');">circle</button>
+  <br>
+  Color : 
+  <button id="colChange" type="button" name="colChange" value="colChange" onClick="colChange('rgb(0, 0, 255)');">colorChange</button>
+  <br>
+  Anime : 
+  <button id="anim" type="button" onClick="move();">move</button>
+
+<div style="text-align:center;">
+<canvas id="testCanvas" width="600" height="300"></canvas>
+</div>
+
+Trans : <div id="state"></div>
+Graphic Select : <div id="GrapSel">四角</div>
+
+<script type="text/javascript">
+var cW = 600;  //キャンバス横サイズ
+var cH = 300;  //キャンバス縦サイズ
+var state = false;
+var grap = 'rect';
+var canvas;
+var context;
+
+var startX;
+var startY;
+var endX;
+var endY;
+var grapJson = {};
+var dlog = [];
+
+
+window.onload = function() {
+  canvas = document.getElementById('testCanvas');
+  //if ( ! canvas || ! canvas.getContext ) return false;
+  ctx = canvas.getContext('2d');
+  grapJson = {'rect':draw_rect,'star':draw_star,'circle':draw_circle};
+};
+
+function draw_log(gp,sX,sY,eX,eY){
+  dlog.unshift({'grap':gp,pos:{'startX':sX,'startY':sY,'endX':eX,'endY':eY}});
+  disp_log();
+}
+
+function disp_log(){
+  var _c;
+  disp_clear();
+  for(var i in dlog){
+    _c = "<li><a id='logGrap_"+i+"' class='dlog' href='#' onclick='dlog_Onedelete(this);' logGrap='" + i + "'>"+ i +" : "+ dlog[i].grap +"</a>"
+    _c = _c + "<div id='hide"+ i +"' style='display: none;'>"
+    _c = _c + "<div id='logPos_sX_"+ i +"'>StartX:"+ Math.floor(dlog[i].pos.startX) +"</div>"
+    _c = _c + "<div id='logPos_sY_"+ i +"'>StartY:"+ Math.floor(dlog[i].pos.startY) +"</div>"
+    _c = _c + "<div id='logPos_eX_"+ i +"'>endX  :"+ Math.floor(dlog[i].pos.endX) +"</div>"
+    _c = _c + "<div id='logPos_eY_"+ i +"'>endY  :"+ Math.floor(dlog[i].pos.endY) +"</div>"
+    _c = _c + "</div>"
+    $('#displog').append(_c);
+  }
+  logclick();
+}
+
+function logclick(){
+  $('ul#displog li').click(function(){var _a = $('ul#displog li').index(this);$('#hide'+_a).css('display','block')});
+}
+
+function dlog_Onedelete(my){ 
+  var _id;
+  _id = my.getAttribute('loggrap');
+  dlog.splice(_id, 1);
+  draw();
+  disp_log();
+}
+
+function disp_clear(){
+   $('#displog').empty();
+}
+
+function draw_clear(){
+  ctx.clearRect(0, 0, 600, 300);
+  dlog=[];
+  disp_log();
+}
+
+function draw_rect(sX,sY,eX,eY){
+  var lX = eX-sX;
+  var lY = eY-sY;
+  ctx.beginPath();
+  ctx.strokeRect(sX, sY, lX, lY);
+}
+
+function gStrok(s,e){
+  if((s-e) > 0){
+    return s-e;
+  }
+  return e-s;
+}
+function sizTweDim(sX,sY,eX,eY){
+  if(gStrok(sX,eX) <= gStrok(sY,eY)){
+    return gStrok(sX,eX);
+  }
+  return gStrok(sY,eY);
+}
+
+function gCenter(s,e){
+  var l = gStrok(s,e);
+  if((s-e) > 0){
+    return e+l/2;
+  }
+  return e-l/2;
+}
+
+function draw_circle(sX,sY,eX,eY){
+  //円を描く
+  var size = sizTweDim(sX,sY,eX,eY);
+  ctx.beginPath();
+  var centerX = gCenter(sX,eX);
+  var centerY = gCenter(sY,eY);
+  ctx.arc(centerX, centerY, size/2, 0, Math.PI * 2, false);
+  ctx.stroke();
+}
+
+function draw_star(sX,sY,eX,eY){
+  //多角
+  var apeces_num = 5;
+  //傾き
+  var tilt = 180;
+  //大きさ
+  var size = sizTweDim(sX,sY,eX,eY);
+  
+  var centerX = gCenter(sX,eX);
+  var centerY = gCenter(sY,eY);
+  
+  //ctx.clearRect(0, 0, 600, 300);
+  polygon(centerX, centerY, apeces_num,size, tilt);
+}
+
+function polygon(centerX,centerY,apeces_num,size,tilt){
+  
+  ctx.beginPath();
+  for (var i = 0; i <= apeces_num; i++){
+    polygonEdge(i);
+  }
+  ctx.closePath();
+  ctx.stroke();
+  ctx.fill();
+
+  function polygonEdge(count) {
+    var x = centerX;
+    var y = centerY;
+    var angle = tilt + 360 / apeces_num * count*2
+    var rad = angle * Math.PI / 180;
+    x += Math.sin(rad) * size;
+    y += Math.cos(rad) * size;
+    if (angle != tilt) {
+      ctx.lineTo(x,y);
+    }
+  }
+}
+
+function mouseUpListner(e) {
+  var rect = e.target.getBoundingClientRect();
+  var work;
+  if(state == true){
+    endX = e.clientX - rect.left;
+    endY = e.clientY - rect.top;
+    draw(1);
+    stateChange(true);
+  } else {
+    startX = e.clientX - rect.left;
+    startY = e.clientY - rect.top;
+    stateChange(false,startX,startY);
+  }
+  
+}
+
+function stateChange(bool,sX,sY){
+  if(bool == true){
+    state = false;
+    $('#state').text('');
+  }else{
+    state = true;
+    $('#state').text('始点指定中 X:'+Math.floor(sX)+' Y:'+Math.floor(sY));
+  }
+}
+
+function mouseMoveListner(e) {  
+  var work;
+  if(state == true){
+    // 一旦クリア
+    var rect = e.target.getBoundingClientRect();    
+    endX = e.clientX - rect.left;
+    endY = e.clientY - rect.top;
+    draw(2);
+  }
+}
+
+function colChange(_rgb){
+  ctx.fillStyle = _rgb;
+  ctx.strokeStyle = _rgb;
+}
+
+function draw(last){
+  ctx.clearRect(0, 0, 600, 300);
+  for(var i in dlog){
+    grapJson[dlog[i].grap](dlog[i].pos.startX,dlog[i].pos.startY,dlog[i].pos.endX,dlog[i].pos.endY);
+  }
+  if(last == 1){
+    grapJson[grap](startX,startY,endX,endY);
+    draw_log(grap,startX,startY,endX,endY);
+  }
+  if(last == 2){
+    grapJson[grap](startX,startY,endX,endY);
+  }
+  
+}
+
+function draw_start() {
+  //イベント：マウスアップ
+  canvas.onmouseup = mouseUpListner;
+  //イベント：マウス移動
+  canvas.onmousemove = mouseMoveListner;
+}
+
+function stop() {
+  //イベント：マウスアップ
+  canvas.onmouseup = "";
+  canvas.onmousemove = "";
+}
+
+function move(){
+  $('#testCanvas').animate({
+    'marginLeft' : '500px'
+  });
+}
+</script>
+<p style="text-align:center;font-size:12px;"><a href="javascript:window.close();">×閉じる</a></p>
+</div>
+
+<div id="sidebar">
+  <ul id="displog">
+  </ul>
+<div>
+</body>
+</html>
