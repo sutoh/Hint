@@ -41,8 +41,7 @@
         2. x,y,hintComment
         3. 初期表示用には、Serverにて動的生成()
       */
-      var dlog={};
-      var Hint = function(PointX,PointY){
+      var hint = function(PointX,PointY){
         var x = 100;
         var y = 100;
         /* Hint Group */
@@ -137,11 +136,12 @@
         { easing: 'bounceInOut'});
       };
       
-      stage.on('doubleclick', function(e) {
+      stage.on('pointermove', function(e) {
         var x = e.stageX;
         var y = e.stageY;
         hint(x,y);
       });
+      
 
       </script>
       <script>
