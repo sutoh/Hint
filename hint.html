@@ -4,6 +4,9 @@
   <meta charset="utf-8">
   <title></title>
   <script src="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
+<!--   <script src="/nerar/common/js/bonsai.js"></script> -->
+  <script src="./bonsai.js"></script>
+  
   <style>
   /* Write code */
   body{
@@ -11,30 +14,26 @@
   #player{
     background-color:#DDD;
     height: 600px;
-    width: 1200px;
+    width: 900px;
   }
   </style>
-</head>
-<body>
-
-    <div id="nav"></div>
-    
-    <script src="./bonsai.iframe-0.3.6.min.js"></script>
-    <div id="content">
-      <div id="player"></div>
+  
       <script type="bs" id="bs">
       /* 初期値 */
       var x,y,m,w,h;
       var MAX_W,MAX_H,WIDTH,HEIGHT;
-      //最大サイズ
-      var MAX_W = 1200;
-      var MAX_H = 600;
 
       //オブジェクトのサイズ
       var m = 2; //倍率(magnification)
       var WIDTH = 100 * m; //幅 
       var HEIGHT = 100 * m; //高
-      
+//      var gazou = '{{img_url}}'  == '/nerar/upload_file/origin/.jpg' ? '/nerar/common/img/logo.png' :  '{{img_url}}' ;
+      var gazou =  'aa.png';
+
+      new Bitmap(gazou).on('load', function() {
+        this.addTo(stage);
+      });
+
       /* Draw Log Memo */
       /* Rules 
         1. Groupオブジェクトの格納
@@ -144,12 +143,19 @@
       
 
       </script>
+</head>
+<body>
+
+    <div id="nav"></div>
+    
+    <div id="content">
+      <div id="player"></div>
       <script>
         var player = document.getElementById('player');
         var b = bonsai.run(player, {
           code: document.getElementById('bs').innerHTML,
           height: 600,
-          width: 1200,
+          width: 900,
           framerate: 50
         });
 
