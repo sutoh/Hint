@@ -9,10 +9,8 @@
   
   <style>
   /* Write code */
-  body{
-  }
   #player{
-    background-color:#DDD;
+    background-color:#EEE;
     height: 600px;
     width: 900px;
   }
@@ -29,30 +27,24 @@
       var HEIGHT = 100 * m; //高
 //      var gazou = '{{img_url}}'  == '/nerar/upload_file/origin/.jpg' ? '/nerar/common/img/logo.png' :  '{{img_url}}' ;
       var gazou =  'aa.png';
-
-      new Bitmap(gazou).on('load', function() {
-        this.addTo(stage);
-      });
-
-      /* Draw Log Memo */
-      /* Rules 
-        1. Groupオブジェクトの格納
-        2. x,y,hintComment
-        3. 初期表示用には、Serverにて動的生成()
+      var dlog = {};
+      dlog = {hint:{pos:{x:240,y:400},comment:'aiueoあいうえお'}}; //phpにて作成
+      /* hintDraw */
+      /*
+        Direction : 1.top 2.under 3.left 4.right;
       */
-      var hint = function(PointX,PointY){
+      var hint = function(PointX,PointY,Comment,Direction){
+        // var hint = function(PointX,PointY){
         var x = 100;
         var y = 100;
         /* Hint Group */
         var hGroup = new Group();
-        hGroup._attributes.x = PointX;
-        hGroup._attributes.y = PointY;
+        hGroup.attr({x:PointX-100,y:PointY-100});
         hGroup.addTo(stage);
         
-        var iGroup = new Group();
-        iGroup._attributes.x = x;
-        iGroup._attributes.y = y;
-        iGroup.addTo(hGroup);
+        var hPGroup = new Group();
+        hPGroup.attr({x:x,y:y});
+        hPGroup.addTo(hGroup);
         
         /* Hint Point */
         var hPoints = new Circle(x, y, 4);
@@ -62,21 +54,22 @@
         var hPoint=[];
         //right
         hPoint[0] = new Ellipse(20,0,15,5);
-        hPoint[0].addTo(iGroup);
+        hPoint[0].addTo(hPGroup);
         hPoint[0].fill(color('green'));
         
         //under
         hPoint[1] = new Ellipse(0,20,5,15);
-        hPoint[1].addTo(iGroup);
+        hPoint[1].addTo(hPGroup);
         hPoint[1].fill(color('green'));
         
         //left
         hPoint[2] = new Ellipse(-20,0,15,5);
-        hPoint[2].addTo(iGroup);
+        hPoint[2].addTo(hPGroup);
         hPoint[2].fill(color('green'));
         
+        //top
         hPoint[3] = new Ellipse(0,-20,5,15);
-        hPoint[3].addTo(iGroup);
+        hPoint[3].addTo(hPGroup);
         hPoint[3].fill(color('green'));
         
         
@@ -115,7 +108,8 @@
         Dr.fill('red');
         
         /* Hint Text */
-        var hText = new Text('foo');
+        var foo = Comment ? Comment : 'Comment Nothing';
+        var hText = new Text(decodeURIComponent(foo));
         hText.addTo(hGroup);
         hText.attr({
           fontFamily: 'Arial, sans-serif',
@@ -125,7 +119,7 @@
           strokeWidth: 3
         });
         
-        iGroup.animate('1s', {
+        hPGroup.animate('1s', {
           rotation: Math.PI
         });
         
@@ -134,14 +128,31 @@
         }, 
         { easing: 'bounceInOut'});
       };
-      
-      stage.on('pointermove', function(e) {
-        var x = e.stageX;
-        var y = e.stageY;
-        hint(x,y);
+
+
+      /* Draw Log Memo */
+      /* Rules 
+        1. Groupオブジェクトの格納
+        2. x,y,Comment,上下左右の方向
+        3. 初期表示用には、Serverにて動的生成()
+      */
+
+      stage.on('click', function(e) {
+        hint(e.stageX,e.stageY);
       });
       
-
+      new Bitmap(gazou).on('load', function() {
+        this.addTo(stage);
+        
+        for(var i in dlog){
+          hint(
+              dlog[i].pos.x
+            , dlog[i].pos.y
+            , dlog[i].comment
+          );
+        }
+      }).attr({height:600,width:900});
+      
       </script>
 </head>
 <body>
